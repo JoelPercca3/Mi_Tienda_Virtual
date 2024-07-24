@@ -1,4 +1,5 @@
 import User from '../models/User.js';
+import db from '../config/db.js';
 
 export const getAllUsers =async (req, res) => {
   try {
@@ -27,7 +28,6 @@ export const getUserById = async (req, res) => {
   }
 };
 
-import db from '../config/db.js';
 
 export const createUser = async (req, res) => {
   const { name, email, password } = req.body;
