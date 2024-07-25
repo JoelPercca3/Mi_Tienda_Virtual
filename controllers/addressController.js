@@ -15,7 +15,7 @@ export const createAddress = async (req, res) => {
   }
 };
 
-// Obtener todas las direcciones
+// Obtener todas las direcciones 
 export const getAllAddresses = async (req, res) => {
   try {
     const [rows] = await db.execute('SELECT * FROM addresses');
