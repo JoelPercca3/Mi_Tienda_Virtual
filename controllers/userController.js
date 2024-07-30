@@ -13,6 +13,12 @@ export const getAllUsers =async (req, res) => {
 
 export const getUserById = async (req, res) => {
   const { id } = req.params;  // Obtiene el ID del usuario de los parámetros de la solicitud
+  const userId = req.user.id; // Obtiene el ID del usuario autenticado desde el token
+
+  // Asegúrate de que el usuario autenticado esté autorizado para acceder al perfil
+  if (id != userId) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
 
   try {
     const [rows] = await db.execute('SELECT * FROM users WHERE id = ?', [id]);
@@ -52,6 +58,13 @@ export const createUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   const { id } = req.params;  // Obtiene el ID del usuario de los parámetros de la solicitud
+  const userId = req.user.id; // Obtiene el ID del usuario autenticado desde el token
+
+  // Asegúrate de que el usuario autenticado esté autorizado para actualizar el perfil
+  if (id != userId) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
   const { name, email, password } = req.body;  // Obtiene los datos del usuario del cuerpo de la solicitud
 
   // Construye la consulta SQL dinámica
