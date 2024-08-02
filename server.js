@@ -1,6 +1,8 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors'; // Importa cors
+import path from 'path';
+import { fileURLToPath } from 'url'; // Necesario para obtener el directorio actual
 import config from './config/config.js';
 import db from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
@@ -17,6 +19,11 @@ import { errorHandler } from './middlewares/errorMiddleware.js';
 dotenv.config();  // Carga las variables de entorno del archivo .env
 
 const app = express();
+
+// Obtén el directorio actual
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 app.use(cors({ // Configura CORS para permitir solicitudes desde el frontend
   origin: 'http://localhost:5173', // URL de tu frontend
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -25,9 +32,8 @@ app.use(cors({ // Configura CORS para permitir solicitudes desde el frontend
 
 app.use(express.json());
 
-app.use(cors()); // Configura CORS para permitir solicitudes desde cualquier origen
-
-app.use(express.json());
+// Configura una ruta estática para servir archivos desde la carpeta uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Define tus rutas aquí...
 app.use('/api/users', userRoutes);
