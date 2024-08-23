@@ -21,6 +21,11 @@ export const createProduct = async (req, res) => {
   let imageUrl = null;
 
   try {
+    // Validar que todos los campos requeridos estén presentes
+    if (!name || !description || !price || !stock) {
+      return res.status(400).json({ error: 'All fields (name, description, price, stock) are required.' });
+    }
+
     if (req.file) {
       // Procesar y guardar la imagen
       const fileName = `${Date.now()}-${req.file.originalname}`;
@@ -30,16 +35,30 @@ export const createProduct = async (req, res) => {
         .resize(300, 300)
         .toFile(imagePath);
 
-      // La URL debe ser accesible públicamente. Puedes ajustar la ruta según tu configuración.
       imageUrl = `/uploads/${fileName}`;
     }
 
+    // Ejecutar la consulta para insertar el producto en la base de datos
     const [result] = await db.execute(
-      'INSERT INTO products (name, description, price, stock, image_url, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
+      'INSERT INTO products (name, description, price, stock, image, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
       [name, description, price, stock, imageUrl || null]
     );
 
-    res.status(201).json({ id: result.insertId, name, description, price, stock, imageUrl });
+    // Responder con el producto creado, incluyendo el ID generado
+    const response = { 
+      id: result.insertId, 
+      name, 
+      description, 
+      price, 
+      stock, 
+      created_at: new Date()  // La fecha de creación es ahora
+    };
+
+    if (imageUrl) {
+      response.image = imageUrl;
+    }
+
+    res.status(201).json(response);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error creating product' });
@@ -94,16 +113,16 @@ export const updateProduct = async (req, res) => {
       imageUrl = `/uploads/${fileName}`;
 
       // Eliminar la imagen anterior
-      const [currentProduct] = await db.execute('SELECT image_url FROM products WHERE id = ?', [id]);
-      if (currentProduct[0].image_url) {
-        const oldImagePath = path.join(__dirname, currentProduct[0].image_url.replace('/uploads/', ''));
+      const [currentProduct] = await db.execute('SELECT image FROM products WHERE id = ?', [id]);
+      if (currentProduct[0].image) {
+        const oldImagePath = path.join(__dirname, currentProduct[0].image.replace('/uploads/', ''));
         if (fs.existsSync(oldImagePath)) {
           fs.unlinkSync(oldImagePath);
         }
       }
 
       await db.execute(
-        'UPDATE products SET name = ?, description = ?, price = ?, stock = ?, image_url = ? WHERE id = ?',
+        'UPDATE products SET name = ?, description = ?, price = ?, stock = ?, image = ? WHERE id = ?',
         [name, description, price, stock, imageUrl, id]
       );
     } else {
@@ -113,7 +132,7 @@ export const updateProduct = async (req, res) => {
       );
     }
 
-    res.status(200).json({ id, name, description, price, stock, imageUrl });
+    res.status(200).json({ id, name, description, price, stock, image: imageUrl });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error updating product' });
@@ -126,9 +145,9 @@ export const deleteProduct = async (req, res) => {
 
   try {
     // Eliminar la imagen asociada
-    const [currentProduct] = await db.execute('SELECT image_url FROM products WHERE id = ?', [id]);
-    if (currentProduct[0].image_url) {
-      const imagePath = path.join(__dirname, currentProduct[0].image_url.replace('/uploads/', ''));
+    const [currentProduct] = await db.execute('SELECT image FROM products WHERE id = ?', [id]);
+    if (currentProduct[0].image) {
+      const imagePath = path.join(__dirname, currentProduct[0].image.replace('/uploads/', ''));
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
       }
