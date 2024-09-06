@@ -15,8 +15,14 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import { errorHandler } from './middlewares/errorMiddleware.js';
+import productImageRoutes from './routes/productImageRoutes.js';
 
 dotenv.config();  // Carga las variables de entorno del archivo .env
+
+// Verificar que la configuración se carga correctamente
+console.log("Access Token Secret:", config.jwt.accessSecret);
+console.log("Refresh Token Secret:", config.jwt.refreshSecret);
+console.log("Server Port:", config.port);
 
 const app = express();
 
@@ -44,8 +50,9 @@ app.use('/api/addresses', addressRoutes);
 app.use('/api/cart', cartRoutes);  // Usa tus rutas del carrito
 app.use('/api/payments', paymentRoutes);
 app.use('/api/auth', authRoutes); // Asegúrate de que la ruta esté configurada
-app.use('/api/reviews', reviewRoutes); // Añadir las rutas de reseñas
-
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/product-images', productImageRoutes);
+ // Añadir las rutas de reseñas
 // Middleware de manejo de errores
 app.use(errorHandler);
 
